@@ -20,23 +20,17 @@ namespace APICatalogo.Controllers
         [HttpGet("produtos")]
         public ActionResult<IEnumerable<Categoria>> GetCategoriasProdutos()
         {
-            var categoria = _context.Categorias.ToList();
-            if (categoria is null)
-            {
-                return NotFound("Categoria nao encontrada...");
-            }
-            return categoria;
+                return _context.Categorias.Include(p => p.Produtos).ToList();
         }
+
         [HttpGet]
-
-        public ActionResult<IEnumerable<Categoria>> Get(int id)
+        public ActionResult<IEnumerable<Categoria>> Get()
         {
-            return _context.Categorias.Include(p => p.Produtos).ToList();
-
+            return _context.Categorias.ToList();
         }
 
         [HttpGet("{id:int}", Name = "ObterCategoria")]
-        public ActionResult<Categoria> GetCategoria(int id)
+        public ActionResult<Categoria> Get(int id)
         {
             var categoria = _context.Categorias.FirstOrDefault(p => p.CategoriaId == id);
             if (categoria == null)
@@ -80,14 +74,14 @@ namespace APICatalogo.Controllers
         {
             var categoria = _context.Categorias.FirstOrDefault(p => p.CategoriaId == id);
 
-            if (categoria is null) 
+            if (categoria is null)
             {
                 return NotFound("Categoria nao encontrada....");
             }
 
             _context.Categorias.Remove(categoria);
             _context.SaveChanges();
-            
+
             return Ok(categoria);
         }
     }
