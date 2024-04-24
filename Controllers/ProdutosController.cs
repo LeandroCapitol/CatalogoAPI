@@ -38,7 +38,7 @@ public class ProdutosController : ControllerBase
             _logger.LogWarning("Produto não encontrado...");
             return NotFound("Produto não encontrado...");
         }
-        return produto;
+        return Ok(produto);
     }
 
     [HttpPost]
@@ -63,24 +63,23 @@ public class ProdutosController : ControllerBase
             return NotFound("Produto não localizado...");
         }
 
-        _repository.Update(produto);
-        return Ok(produto);
+        bool atuallizado = _repository.Update(produto);
+
+        if (atuallizado)
+            return Ok(produto);
+
+        return StatusCode(500,$"falha ao atualizar o produto de id = {id}");
     }
 
     [HttpDelete("{id:int}")]
     public ActionResult Delete(int id)
     {
-        var produto = _repository.Delete(id);
+        bool produto = _repository.Delete(id);
 
-        if (produto is false)
-        {
-            _logger.LogWarning($"Produto não localizado...");
-            return NotFound("Produto não localizado...");
-        }
+        if (produto)
+            return Ok($"Produto id = {id} excluído!");
 
-        //_context.Produtos.Remove(produto);
-        //_context.SaveChanges();
+        return StatusCode(500, $"falha ao excluir o produto de id = {id}");
 
-        return Ok(produto);
     }
 }

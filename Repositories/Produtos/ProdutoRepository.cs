@@ -20,7 +20,12 @@ namespace APICatalogo.Repositories.Produtos
 
         public Produto GetProduto(int id)
         {
-            return _context.Produtos.FirstOrDefault(c => c.ProdutoId == id);
+            var produto = _context.Produtos.FirstOrDefault(c => c.ProdutoId == id);
+           
+            if (produto == null)
+                throw new InvalidOperationException("Produto é null");
+            
+            return produto;
         }
 
         public Produto Create(Produto produto)
@@ -51,9 +56,6 @@ namespace APICatalogo.Repositories.Produtos
         public bool Delete(int id)
         {
             var produto = _context.Produtos.Find(id);
-
-            if (produto is null)
-                return false;
 
             if (produto is not null)
             {

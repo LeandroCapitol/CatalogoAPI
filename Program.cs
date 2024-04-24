@@ -5,7 +5,6 @@ using APICatalogo.Repositories.Categorias;
 using APICatalogo.Repositories.Produtos;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
