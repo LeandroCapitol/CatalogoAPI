@@ -1,8 +1,8 @@
 using APICatalogo.Context;
 using APICatalogo.Extensions;
 using APICatalogo.Filters;
-using APICatalogo.Repositories.Categorias;
-using APICatalogo.Repositories.Produtos;
+using APICatalogo.Repositories;
+using APICatalogo.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +32,7 @@ builder.Services.AddScoped<ApiLoggingFilter>();
 
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
+builder.Services.AddScoped(typeof(IRepository<>),typeof( Repository<>));
 
 
 // Para salvar logging de build
