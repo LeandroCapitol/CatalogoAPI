@@ -8,19 +8,32 @@ namespace APICatalogo.Controllers;
 [ApiController]
 public class ProdutosController : ControllerBase
 {
-    private readonly IProdutoRepository _repository;
+    private readonly IUnitOfWork _uof;
     private readonly ILogger<ProdutosController> _logger;
 
-    public ProdutosController(IProdutoRepository repository, ILogger<ProdutosController> logger)
+    public ProdutosController(IUnitOfWork uof, ILogger<ProdutosController> logger)
     {
-        _repository = repository;
+        _uof = uof;
         _logger = logger;
+    }
+
+    [HttpGet("produtos/{id}")]
+    public ActionResult<IEnumerable<Produto>> GetProdutoCategoria(int id)
+    {
+        var produtos = _uof.ProdutoRepository.GetProdutosPorCategoria(id);
+        if (produtos is null)
+        {
+            _logger.LogWarning("Produto não encontrado...");
+            return NotFound("Produto não encontrado...");
+        }
+
+        return Ok(produtos);
     }
 
     [HttpGet]
     public async Task<ActionResult<IQueryable<Produto>>> Get()
     {
-        var produtos = _repository.GetProdutos();
+        var produtos = _uof.ProdutoRepository.GetAll();
         if (produtos is null)
         {
              _logger.LogWarning("Sem produtos");
@@ -32,7 +45,7 @@ public class ProdutosController : ControllerBase
     [HttpGet("{id}", Name = "ObterProduto")]
     public ActionResult<Produto> Get(int id)
     {
-        var produto = _repository.GetProduto(id);
+        var produto = _uof.ProdutoRepository.Get(c => c.CategoriaId == id);
         if (produto is null)
         {
             _logger.LogWarning("Produto não encontrado...");
@@ -50,7 +63,9 @@ public class ProdutosController : ControllerBase
             return NotFound("Produto não criado...");
         }
 
-        _repository.Create(produto);
+        _uof.ProdutoRepository.Create(produto);
+        _uof.Commit();
+
         return new CreatedAtRouteResult("ObterProduto", new { id = produto.ProdutoId }, produto);
     }
 
@@ -63,23 +78,25 @@ public class ProdutosController : ControllerBase
             return NotFound("Produto não localizado...");
         }
 
-        bool atuallizado = _repository.Update(produto);
+        var produtoAtualizado = _uof.ProdutoRepository.Update(produto);
+        _uof.Commit();
 
-        if (atuallizado)
-            return Ok(produto);
+        return Ok(produtoAtualizado);
 
-        return StatusCode(500,$"falha ao atualizar o produto de id = {id}");
     }
 
     [HttpDelete("{id:int}")]
     public ActionResult Delete(int id)
     {
-        bool produto = _repository.Delete(id);
+        var produto = _uof.ProdutoRepository.Get(c => c.ProdutoId == id);
 
-        if (produto)
-            return Ok($"Produto id = {id} excluído!");
+        if (produto is null)
+            return NotFound("Produto não encontrado");
 
-        return StatusCode(500, $"falha ao excluir o produto de id = {id}");
+        var produtoDeletado = _uof.ProdutoRepository.Delete(produto);
+        _uof.Commit();
+
+        return Ok(produtoDeletado);
 
     }
 }
