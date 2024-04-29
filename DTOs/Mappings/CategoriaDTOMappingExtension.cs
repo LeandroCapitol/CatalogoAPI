@@ -4,16 +4,16 @@ namespace APICatalogo.DTOs.Mappings
 {
     public static class CategoriaDTOMappingExtension
     {
-        public static CategoriaDTO? ToCategoriaDTO(this CategoriaDTO categoriaDTO)
+        public static CategoriaDTO? ToCategoriaDTO(this Categoria categoria)
         {
-            if (categoriaDTO == null)
+            if (categoria == null)
                 return null;
 
             return new CategoriaDTO
             {
-                CategoriaId = categoriaDTO.CategoriaId,
-                Nome = categoriaDTO.Nome,
-                ImagemUrl = categoriaDTO.ImagemUrl,
+                CategoriaId = categoria.CategoriaId,
+                Nome = categoria.Nome,
+                ImagemUrl = categoria.ImagemUrl,
             };
         }
 
@@ -30,7 +30,7 @@ namespace APICatalogo.DTOs.Mappings
             };
         }
 
-        public static IEnumerable<CategoriaDTO?> ToCategoriaDTOList(this IEnumerable<Categoria> categorias)
+        public static IEnumerable<CategoriaDTO?> ToCategoriaDtoList(this IEnumerable<Categoria> categorias)
         {
             if (!categorias.Any() || categorias is null) return new List<CategoriaDTO>();
 
