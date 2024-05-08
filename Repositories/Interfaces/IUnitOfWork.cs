@@ -6,7 +6,7 @@ namespace APICatalogo.Repositories.Interfaces
     {
         IProdutoRepository ProdutoRepository { get; }
         ICategoriaRepository CategoriaRepository { get; }
-        void Commit();
+        Task CommitAsync();
 
     }
 }
