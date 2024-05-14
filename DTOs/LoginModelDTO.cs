@@ -2,7 +2,7 @@
 
 namespace APICatalogo.DTOs
 {
-    public class LogginModelDTO
+    public class LoginModelDTO
     {
         [Required(ErrorMessage = "User name is required")]
         public string? UserName { get; set; }
