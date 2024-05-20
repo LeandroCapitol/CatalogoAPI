@@ -5,7 +5,7 @@ namespace APICatalogo.Services.Interfaces
 {
     public interface ITokenService
     {
-        JwtSecurityToken GenereteAcessToken(IEnumerable<Claim> claims,
+        JwtSecurityToken GenerateAccessToken(IEnumerable<Claim> claims,
                                             IConfiguration _config);
 
         string GenereteRefreshToken();

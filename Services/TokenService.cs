@@ -9,15 +9,15 @@ namespace APICatalogo.Services
 {
     public class TokenService : ITokenService
     {
-        public JwtSecurityToken GenereteAcessToken(IEnumerable<Claim> claims, IConfiguration _config)
+        public JwtSecurityToken GenerateAccessToken(IEnumerable<Claim> claims, IConfiguration _config)
         {
-            var key = _config.GetSection("JWT").GetValue<string>("SecretJey") ??
-                        throw new InvalidOperationException("Invalid secret key");
+            var key = _config.GetSection("JWT").GetValue<string>("SecretKey") ??
+               throw new InvalidOperationException("Invalid secret Key");
 
             var privateKey = Encoding.UTF8.GetBytes(key);
 
             var signingCredentials = new SigningCredentials(new SymmetricSecurityKey(privateKey),
-                                         SecurityAlgorithms.HmacSha256Signature);
+                                     SecurityAlgorithms.HmacSha256Signature);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -25,17 +25,16 @@ namespace APICatalogo.Services
                 Expires = DateTime.UtcNow.AddMinutes(_config.GetSection("JWT")
                                                     .GetValue<double>("TokenValidityInMinutes")),
                 Audience = _config.GetSection("JWT")
-                                                .GetValue<string>("ValidAudience"),
+                                  .GetValue<string>("ValidAudience"),
                 Issuer = _config.GetSection("JWT").GetValue<string>("ValidIssuer"),
                 SigningCredentials = signingCredentials
             };
 
-            var tokenHandler = new JwtSecurityTokenHandler ();
+            var tokenHandler = new JwtSecurityTokenHandler();
 
             var token = tokenHandler.CreateJwtSecurityToken(tokenDescriptor);
 
             return token;
-
         }
 
         public string GenereteRefreshToken()

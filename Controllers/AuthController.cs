@@ -11,6 +11,7 @@ namespace APICatalogo.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+
     public class AuthController : ControllerBase
     {
         private readonly ITokenService _tokenService;
@@ -31,7 +32,7 @@ namespace APICatalogo.Controllers
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginModelDTO model)
         {
-            var user = await _userManager.FindByNameAsync(model.UserName);
+            var user = await _userManager.FindByNameAsync(model.UserName!);
 
             if (user is not null && await _userManager.CheckPasswordAsync(user, model.Password!))
             {
@@ -49,7 +50,7 @@ namespace APICatalogo.Controllers
                     authClaims.Add(new Claim(ClaimTypes.Role, userRole));
                 }
 
-                var token = _tokenService.GenereteAcessToken(authClaims, _configuration);
+                var token = _tokenService.GenerateAccessToken(authClaims, _configuration);
                 var refreshToken = _tokenService.GenereteRefreshToken();
 
                 _ = int.TryParse(_configuration["JWT:RefreshTokenValidityinMinutes"],
@@ -128,7 +129,7 @@ namespace APICatalogo.Controllers
                              || user.RefreshTokenExpiryTime <= DateTime.Now)
                 return BadRequest("Invalid acess token/refresh token");
 
-            var newAcessToken = _tokenService.GenereteAcessToken(
+            var newAcessToken = _tokenService.GenerateAccessToken(
                                                 principal.Claims.ToList(), _configuration);
 
             var newRefreshToken = _tokenService.GenereteRefreshToken();
