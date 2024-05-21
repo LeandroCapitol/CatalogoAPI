@@ -37,7 +37,7 @@ namespace APICatalogo.Services
             return token;
         }
 
-        public string GenereteRefreshToken()
+        public string GenerateRefreshToken()
         {
             var secureRandomByte = new byte[128];
 
@@ -52,7 +52,7 @@ namespace APICatalogo.Services
 
         public ClaimsPrincipal GetPrincipalFromExpiredToken(string token, IConfiguration _config)
         {
-            var secretKey = _config["JWT:SecretKLey"] ?? throw new InvalidOperationException("Invalid key");
+            var secretKey = _config["JWT:SecretKey"] ?? throw new InvalidOperationException("Invalid key");
 
             var tokenValidationParameters = new TokenValidationParameters
             {
@@ -60,25 +60,23 @@ namespace APICatalogo.Services
                 ValidateIssuer = false,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(
-                                       Encoding.UTF8.GetBytes(secretKey)),
+                                      Encoding.UTF8.GetBytes(secretKey)),
                 ValidateLifetime = false
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();
 
             var principal = tokenHandler.ValidateToken(token, tokenValidationParameters,
-                                                       out SecurityToken securityToken);      
+                                                       out SecurityToken securityToken);
 
-            if (securityToken is not JwtSecurityToken jwtSecurityToken || 
-                              !jwtSecurityToken.Header.Alg.Equals(
-                               SecurityAlgorithms.HmacSha256,
-                               StringComparison.InvariantCultureIgnoreCase))
+            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+                             !jwtSecurityToken.Header.Alg.Equals(
+                             SecurityAlgorithms.HmacSha256,
+                             StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new SecurityTokenException("Invalid token");
             }
-
             return principal;
-
         }
     }
 }

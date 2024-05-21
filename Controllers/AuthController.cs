@@ -4,6 +4,7 @@ using APICatalogo.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -18,14 +19,77 @@ namespace APICatalogo.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthController> _logger;
 
         public AuthController(ITokenService tokenService, UserManager<ApplicationUser> userManager,
-                             RoleManager<IdentityRole> roleManager, IConfiguration configuration)
+                             RoleManager<IdentityRole> roleManager, IConfiguration configuration, ILogger<AuthController> logger)
         {
             _tokenService = tokenService;
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
+            _logger = logger;
+        }
+        [HttpPost]
+        [Route("addUseToRole")]
+        public async Task<IActionResult> AddUserToRole(string email, string roleName)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user != null)
+            {
+                var result = await _userManager.AddToRoleAsync(user, roleName);
+
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation(1, $"User {user.Email} added to the {roleName} role");
+
+                    return StatusCode(StatusCodes.Status200OK,
+                        new ResponseDTO { Status = "Sucess", Message = $"User {user.Email} added to the {roleName} role" });
+                }
+                else
+                {
+                    _logger.LogInformation(1, $"Error: Unable to add user {user.Email} to the {roleName} role");
+
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                        new ResponseDTO { Status = "Error", Message = $"Error: Unable to add user {user.Email} to the {roleName} role" });
+                }
+            }
+
+            return BadRequest(new { error = "Unable to find user" });
+        }
+
+        [HttpPost]
+        [Route("createRole")]
+        public async Task<IActionResult> CreateRole(string roleName)
+        {
+            var roleExist = await _roleManager.RoleExistsAsync(roleName);
+
+            if (!roleExist)
+            {
+                var roleResult = await _roleManager.CreateAsync(new IdentityRole(roleName));
+                if (roleResult.Succeeded)
+                {
+                    _logger.LogInformation(1, "Role added");
+                    return StatusCode(StatusCodes.Status200OK,
+                        new ResponseDTO { Status = "Success", Message =
+                        $"Role {roleName} added successfullly"});
+                }
+                else
+                {
+                    _logger.LogInformation(2, "Error");
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                        new ResponseDTO
+                        {
+                            Status = "Error",
+                            Message =
+                                $"Issue adding the new {roleName} role"
+                        });
+                }
+            }
+
+            return StatusCode(StatusCodes.Status400BadRequest,
+                new ResponseDTO { Message = "Error", Status = "Role already exist" });
         }
 
         [HttpPost]
@@ -51,7 +115,7 @@ namespace APICatalogo.Controllers
                 }
 
                 var token = _tokenService.GenerateAccessToken(authClaims, _configuration);
-                var refreshToken = _tokenService.GenereteRefreshToken();
+                var refreshToken = _tokenService.GenerateRefreshToken();
 
                 _ = int.TryParse(_configuration["JWT:RefreshTokenValidityinMinutes"],
                     out int refreshTokenValidityInMinutes);
@@ -107,40 +171,48 @@ namespace APICatalogo.Controllers
         [Route("refresh-token")]
         public async Task<IActionResult> RefreshToken(TokenModel tokenModel)
         {
-            if (tokenModel is null)
-                return BadRequest("Invalid client request");
 
-            string? acessToken = tokenModel.AcessToken
-                                 ?? throw new ArgumentNullException(nameof(tokenModel));
+            if (tokenModel is null)
+            {
+                return BadRequest("Invalid client request");
+            }
+
+            string? accessToken = tokenModel.AcessToken
+                                  ?? throw new ArgumentNullException(nameof(tokenModel));
 
             string? refreshToken = tokenModel.RefreshToken
-                     ?? throw new ArgumentException(nameof(tokenModel));
+                                   ?? throw new ArgumentException(nameof(tokenModel));
 
-            var principal = _tokenService.GetPrincipalFromExpiredToken(acessToken!, _configuration);
+            var principal = _tokenService.GetPrincipalFromExpiredToken(accessToken!, _configuration);
 
-            if (principal is null)
-                return BadRequest("Invalid acess token/refresh token");
+            if (principal == null)
+            {
+                return BadRequest("Invalid access token/refresh token");
+            }
 
-            string userName = principal.Identity.Name;
+            string username = principal.Identity.Name;
 
-            var user = await _userManager.FindByNameAsync(userName!);
+            var user = await _userManager.FindByNameAsync(username!);
 
-            if (user is null || user.RefreshToken != refreshToken
+            if (user == null || user.RefreshToken != refreshToken
                              || user.RefreshTokenExpiryTime <= DateTime.Now)
-                return BadRequest("Invalid acess token/refresh token");
+            {
+                return BadRequest("Invalid access token/refresh token");
+            }
 
-            var newAcessToken = _tokenService.GenerateAccessToken(
-                                                principal.Claims.ToList(), _configuration);
+            var newAccessToken = _tokenService.GenerateAccessToken(
+                                               principal.Claims.ToList(), _configuration);
 
-            var newRefreshToken = _tokenService.GenereteRefreshToken();
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
 
             user.RefreshToken = newRefreshToken;
+
             await _userManager.UpdateAsync(user);
 
             return new ObjectResult(new
             {
-                acessToken = new JwtSecurityTokenHandler().WriteToken(newAcessToken),
-                refreshToken = newRefreshToken,
+                accessToken = new JwtSecurityTokenHandler().WriteToken(newAccessToken),
+                refreshToken = newRefreshToken
             });
         }
 
