@@ -71,6 +71,8 @@ public class ProdutosController : ControllerBase
     }
 
     [HttpGet("pagination")]
+    [Authorize(Policy = "UserOnly")]
+
     public async Task<ActionResult<IEnumerable<ProdutoDTO>>> Get([FromQuery]
                                     ProdutosParameters produtosParameters)
     {

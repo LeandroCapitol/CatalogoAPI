@@ -4,7 +4,6 @@ using APICatalogo.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -32,6 +31,7 @@ namespace APICatalogo.Controllers
         }
         [HttpPost]
         [Route("addUseToRole")]
+        [Authorize(Policy = "SuperAdminOnly")]
         public async Task<IActionResult> AddUserToRole(string email, string roleName)
         {
             var user = await _userManager.FindByEmailAsync(email);
@@ -61,6 +61,7 @@ namespace APICatalogo.Controllers
 
         [HttpPost]
         [Route("createRole")]
+        [Authorize(Policy = "SuperAdminOnly")]
         public async Task<IActionResult> CreateRole(string roleName)
         {
             var roleExist = await _roleManager.RoleExistsAsync(roleName);
@@ -106,6 +107,7 @@ namespace APICatalogo.Controllers
                 {
                     new Claim(ClaimTypes.Name, user.UserName!),
                     new Claim(ClaimTypes.Email, user.Email!),
+                    new Claim("id",user.UserName!),
                     new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),
                 };
 
@@ -219,6 +221,8 @@ namespace APICatalogo.Controllers
         [Authorize]
         [HttpPost]
         [Route("revoke/{username}")]
+        [Authorize(Policy = "ExclusiveOnly")]
+
         public async Task<IActionResult> Revoke(string username)
         {
             var user = await _userManager.FindByNameAsync(username);
