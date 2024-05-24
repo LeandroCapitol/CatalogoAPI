@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -28,6 +27,16 @@ builder.Services.AddControllers(options =>
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 })
 .AddNewtonsoftJson();
+
+var OrigensComAcessoPermitido = "_origensComAcessoPermitido";
+
+builder.Services.AddCors(options =>
+    options.AddPolicy(name: OrigensComAcessoPermitido,
+    policy =>
+    {
+        policy.WithOrigins("http://www.apirequest.io");
+    })
+);
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -135,6 +144,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+
+app.UseCors(OrigensComAcessoPermitido);
+
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
