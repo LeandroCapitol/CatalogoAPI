@@ -8,6 +8,7 @@ using APICatalogo.Repositories;
 using APICatalogo.Repositories.Interfaces;
 using APICatalogo.Services;
 using APICatalogo.Services.Interfaces;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -155,8 +156,21 @@ builder.Services.AddRateLimiter(options =>
                             }));
 });
 
-builder.Services.AddScoped<ApiLoggingFilter>();
+builder.Services.AddApiVersioning(o =>
+{
+    o.DefaultApiVersion = new ApiVersion(1, 0);
+    o.AssumeDefaultVersionWhenUnspecified = true;
+    o.ReportApiVersions = true;
+    o.ApiVersionReader = ApiVersionReader.Combine(
+        new QueryStringApiVersionReader(),
+        new UrlSegmentApiVersionReader());
+}).AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
 
+builder.Services.AddScoped<ApiLoggingFilter>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
