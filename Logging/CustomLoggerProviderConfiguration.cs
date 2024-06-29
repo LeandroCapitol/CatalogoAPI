@@ -1,9 +1,7 @@
-﻿namespace APICatalogo.Logging
-{
-    public class CustomLoggerProviderConfiguration
-    {
-        public LogLevel LogLevel { get; set; } = LogLevel.Warning;
+﻿namespace APICatalogo.Logging;
 
-        public int EventId { get; set; } = 0;
-    }
+public class CustomLoggerProviderConfiguration
+{
+    public LogLevel LogLevel { get; set; } = LogLevel.Warning;
+    public int EventId { get; set; } = 0;
 }

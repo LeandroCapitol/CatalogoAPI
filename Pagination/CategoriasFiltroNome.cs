@@ -1,7 +1,6 @@
-﻿namespace APICatalogo.Pagination
+﻿namespace APICatalogo.Pagination;
+
+public class CategoriasFiltroNome : QueryStringParameters
 {
-    public class CategoriasFiltroNome : QueryStringParameters
-    {
-        public string? Nome { get; set; }
-    }
+    public string? Nome { get; set; }
 }

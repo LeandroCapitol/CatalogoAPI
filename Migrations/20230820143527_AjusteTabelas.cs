@@ -15,11 +15,8 @@ namespace APICatalogo.Migrations
                 table: "Produtos",
                 type: "decimal(10,2)",
                 nullable: false,
-                defaultValue: 0m,
-                oldClrType: typeof(string),
-                oldType: "longtext",
-                oldNullable: true)
-                .OldAnnotation("MySql:CharSet", "utf8mb4");
+                oldClrType: typeof(decimal),
+                oldType: "decimal(65,30)");
 
             migrationBuilder.UpdateData(
                 table: "Produtos",
@@ -120,14 +117,13 @@ namespace APICatalogo.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
+            migrationBuilder.AlterColumn<decimal>(
                 name: "Preco",
                 table: "Produtos",
-                type: "longtext",
-                nullable: true,
+                type: "decimal(65,30)",
+                nullable: false,
                 oldClrType: typeof(decimal),
-                oldType: "decimal(10,2)")
-                .Annotation("MySql:CharSet", "utf8mb4");
+                oldType: "decimal(10,2)");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Nome",

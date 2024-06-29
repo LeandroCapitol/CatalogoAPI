@@ -12,26 +12,6 @@ namespace APICatalogo.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<decimal>(
-                name: "Preco",
-                table: "Produtos",
-                type: "decimal(65,30)",
-                nullable: false,
-                oldClrType: typeof(decimal),
-                oldType: "decimal(10,2)");
-
-            migrationBuilder.AlterColumn<string>(
-                name: "Nome",
-                table: "Produtos",
-                type: "varchar(20)",
-                maxLength: 20,
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "varchar(80)",
-                oldMaxLength: 80)
-                .Annotation("MySql:CharSet", "utf8mb4")
-                .OldAnnotation("MySql:CharSet", "utf8mb4");
-
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -274,26 +254,6 @@ namespace APICatalogo.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "Preco",
-                table: "Produtos",
-                type: "decimal(10,2)",
-                nullable: false,
-                oldClrType: typeof(decimal),
-                oldType: "decimal(65,30)");
-
-            migrationBuilder.AlterColumn<string>(
-                name: "Nome",
-                table: "Produtos",
-                type: "varchar(80)",
-                maxLength: 80,
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "varchar(20)",
-                oldMaxLength: 20)
-                .Annotation("MySql:CharSet", "utf8mb4")
-                .OldAnnotation("MySql:CharSet", "utf8mb4");
         }
     }
 }

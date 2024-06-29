@@ -1,8 +1,7 @@
-﻿namespace APICatalogo.Pagination
+﻿namespace APICatalogo.Pagination;
+
+public class ProdutosFiltroPreco : QueryStringParameters
 {
-    public class ProdutosFiltroPreco : QueryStringParameters
-    {
-        public decimal? Preco { get; set; }
-        public string? PrecoCriterio { get; set; }
-    }
+    public decimal? Preco { get; set; }
+    public string? PrecoCriterio { get; set; } // "maior", "menor" ou "igual"
 }

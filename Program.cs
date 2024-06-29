@@ -5,16 +5,17 @@ using APICatalogo.Logging;
 using APICatalogo.Models;
 using APICatalogo.RateLimitOptions;
 using APICatalogo.Repositories;
-using APICatalogo.Repositories.Interfaces;
 using APICatalogo.Services;
-using APICatalogo.Services.Interfaces;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -35,18 +36,40 @@ builder.Services.AddControllers(options =>
 var OrigensComAcessoPermitido = "_origensComAcessoPermitido";
 
 builder.Services.AddCors(options =>
-    options.AddPolicy(name: OrigensComAcessoPermitido,
-    policy =>
-    {
-        policy.WithOrigins("http://www.apirequest.io");
-    })
+   options.AddPolicy(name: OrigensComAcessoPermitido,
+   policy =>
+   {
+       policy.WithOrigins("http://www.apirequest.io");
+   })
 );
 
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "apiagenda", Version = "v1" });
+    //c.SwaggerDoc("v1", new OpenApiInfo { Title = "testev1", Version = "v1" });
+    //c.SwaggerDoc("v2", new OpenApiInfo { Title = "testev2", Version = "v2" });
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "v1",
+        Title = "APICatalogo",
+        Description = "Catálogo de Produtos e Categorias",
+        TermsOfService = new Uri("https://macoratti.net/terms"),
+        Contact = new OpenApiContact
+        {
+            Name = "macoratti",
+            Email = "macoratti@yahoo.com",
+            Url = new Uri("https://www.macoratti.net"),
+        },
+        License = new OpenApiLicense
+        {
+            Name = "Usar sobre LICX",
+            Url = new Uri("https://macoratti.net/license"),
+        }
+    });
+
+    var xmlFileName = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFileName));
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
     {
@@ -55,7 +78,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Bearer JWT",
+        Description = "Bearer JWT ",
     });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
@@ -78,7 +101,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddDefaultTokenProviders();
 
 string mySqlConnection = builder.Configuration
-                                .GetConnectionString("DefaultConnection");
+                                .GetConnectionString("DefaultConnection") ??
+                                throw new InvalidOperationException();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
                     options.UseMySql(mySqlConnection,
@@ -109,19 +133,16 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-
-    options.AddPolicy("SuperAdminOnly", policy => policy.RequireRole("Admin").RequireClaim("id", "Leandro"));
-
-    options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
-
-    options.AddPolicy("ExclusivePolicyOnly", policy =>
-            policy.RequireAssertion(context => context.User.HasClaim(claim =>
-                                claim.Type == "id" && claim.Value == "Leandro" ||
-                                context.User.IsInRole("SuperAdmin"))));
-});
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"))
+    .AddPolicy("SuperAdminOnly", policy =>
+                       policy.RequireRole("Admin").RequireClaim("id", "macoratti"))
+    .AddPolicy("UserOnly", policy => policy.RequireRole("User"))
+    .AddPolicy("ExclusiveOnly", policy =>
+                      policy.RequireAssertion(context => 
+                      context.User.HasClaim(claim =>
+                                           claim.Type == "id" && claim.Value == "macoratti") 
+                                           || context.User.IsInRole("SuperAdmin")));
 
 var myOptions = new MyRateLimitOptions();
 
@@ -131,9 +152,9 @@ builder.Services.AddRateLimiter(rateLimiterOptions =>
 {
     rateLimiterOptions.AddFixedWindowLimiter(policyName: "fixedwindow", options =>
     {
-        options.PermitLimit = myOptions.PermitLimit;
+        options.PermitLimit = myOptions.PermitLimit;//1;
         options.Window = TimeSpan.FromSeconds(myOptions.Window);
-        options.QueueLimit = myOptions.QueueLimit;
+        options.QueueLimit = myOptions.QueueLimit;//2;
         options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
     });
     rateLimiterOptions.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -156,14 +177,14 @@ builder.Services.AddRateLimiter(options =>
                             }));
 });
 
-builder.Services.AddApiVersioning(o =>
+var temp = builder.Services.AddApiVersioning(o =>
 {
-    o.DefaultApiVersion = new ApiVersion(2, 0);
+    o.DefaultApiVersion = new ApiVersion(1, 0);
     o.AssumeDefaultVersionWhenUnspecified = true;
     o.ReportApiVersions = true;
     o.ApiVersionReader = ApiVersionReader.Combine(
-        new QueryStringApiVersionReader(),
-        new UrlSegmentApiVersionReader());
+                          new QueryStringApiVersionReader(),
+                          new UrlSegmentApiVersionReader());
 }).AddApiExplorer(options =>
 {
     options.GroupNameFormat = "'v'VVV";
@@ -189,13 +210,23 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    //Habilita o middleware para servir o Swagger 
+    //gerado como um endpoint  JSON       
     app.UseSwagger();
-    app.UseSwaggerUI();
+    //habilita o middleware de arquivos estaticos
+    //app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json",
+            "APICatalogo");
+    });
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
+app.UseRateLimiter();
 
 app.UseCors(OrigensComAcessoPermitido);
 

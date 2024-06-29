@@ -1,18 +1,17 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 
-namespace APICatalogo.Controllers
+namespace APICatalogo.Controllers;
+
+[Route("api/v{version:apiVersion}/teste")]
+[ApiController]
+[ApiVersion("1.0")]
+[ApiExplorerSettings(IgnoreApi = true)]
+public class TesteV1Controller : ControllerBase
 {
-    [Route("api/api/v{version:apiVersion}/teste")]
-    [ApiController]
-    [ApiVersion("1.0", Deprecated = true)]
-    public class TesteV1Controller : ControllerBase
+    [HttpGet]
+    public string GetVersion()
     {
-        [HttpGet]
-        public string GetVersion()
-        {
-            return "TesteV1 - GET - Api Versão 1.0";
-        }
+        return "TesteV1 - GET - Api Versão 1.0";
     }
 }
- 
